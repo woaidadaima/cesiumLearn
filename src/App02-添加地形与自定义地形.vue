@@ -27,9 +27,37 @@ Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(
 onMounted(async () => {
   const viewer = new Cesium.Viewer("cesiumContainer", {
     infoBox: false,
+    // geocoder: false,
+    // homeButton: false,
+    // sceneModePicker: false,
+    // timeline: false,
+    // navigationHelpButton: false,
+    // animation: false,
+    // fullscreenButton: false,
+    // baseLayerPicker: false,
+    // terrain: Cesium.Terrain.fromWorldTerrain({
+    //   requestWaterMask: true,
+    //   requestVertexNormals: true,
+    // }),
+    terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
+      "/terrains/gz",
+      {
+        requestWaterMask: true,
+        requestVertexNormals: true,
+      }
+    ),
   });
 
   viewer.cesiumWidget.creditContainer.style.display = "none";
+  // 相机飞到广州
+  viewer.camera.flyTo({
+    destination: Cesium.Rectangle.fromDegrees(
+      113.2, // 西经
+      22.5, // 南纬
+      114.5, // 东经
+      23.5 // 北纬
+    ),
+  });
 
   console.log("layers", viewer.imageryLayers._layers, viewer.imageryLayers);
 });
