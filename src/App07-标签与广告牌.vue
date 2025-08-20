@@ -73,18 +73,6 @@ onMounted(async () => {
       pixelOffset: new Cesium.Cartesian2(0, -50),
     },
   });
-
-  //添加飞机
-  const airplaneEntity = viewer.entities.add({
-    name: "Airplane",
-    position: Cesium.Cartesian3.fromDegrees(113.3191, 23.109, 800),
-    model: {
-      uri: "/models/Air.glb", // 模型路径
-      minimumPixelSize: 64, // 最小像素大小
-      maximumScale: 200, // 最大缩放比例
-    },
-  });
-  console.log("🚀 ~ airplaneEntity:", airplaneEntity);
 });
 </script>
 <style scoped lang="scss">
