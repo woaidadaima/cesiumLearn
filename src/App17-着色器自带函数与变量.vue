@@ -137,43 +137,21 @@ onMounted(async () => {
       `,
     },
   });
-
+  //用gasp创建补间动画
+  gsap.to(material2.uniforms, {
+    duration: 5,
+    uTime: 1,
+    repeat: -1,
+    ease: "linear",
+  });
   console.log("🚀 ~ material2:", material2);
   //可以采用上面传对象写法，也可以采用下面的方式
   // material2.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.5);
 
   let appearance = new Cesium.EllipsoidSurfaceAppearance({
-    // material: material2,
-    //片源着色器
-    fragmentShaderSource: `
-in vec2 v_st;
-uniform float uTime; // 声明 uniform
-
-void main()
-{
-    // czm_materialInput materialInput;
-    //  vec4 backgroundColor = vec4(v_st,1.0,1.0);
-    // czm_material material = czm_getMaterial(materialInput);
-
-
-  // 最终混合：如果想全局替换背景色，可以直接覆盖
-    out_FragColor =  vec4(v_st,uTime,1.0);
-}
-`,
+    material: material2,
   });
-  appearance.uniforms = {
-    uTime: 0,
-  };
   console.log("🚀 ~ appearance:", appearance);
-
-  //用gasp创建补间动画
-  gsap.to(appearance.uniforms, {
-    duration: 2,
-    uTime: 1,
-    repeat: -1,
-    yoyo: true,
-    ease: "linear",
-  });
   const primitive = new Cesium.Primitive({
     geometryInstances: [rectangleInstance, rectangleInstance2],
     appearance: appearance,

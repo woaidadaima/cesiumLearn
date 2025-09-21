@@ -8,7 +8,7 @@ window.CESIUM_BASE_URL = "/";
 
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted } from "vue";
-import { gsap } from "gsap";
+
 Cesium.Ion.defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmYmE4NmE2OS1kNzYzLTRhZmItOThlMC05NjQxY2FiM2Y0OTQiLCJpZCI6MzIxMTU3LCJpYXQiOjE3NTI0NTc5Nzh9.R6dYKw8CWLxIFurs6-vr80vy28W5gztwaiT0fS5hn1M";
 
@@ -54,7 +54,7 @@ onMounted(async () => {
 
   const rectangleGeometry = new Cesium.RectangleGeometry({
     rectangle: Cesium.Rectangle.fromDegrees(80, 20, 90, 30),
-    vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
   });
 
   const rectangleInstance = new Cesium.GeometryInstance({
@@ -68,7 +68,7 @@ onMounted(async () => {
   });
   const rectangleGeometry2 = new Cesium.RectangleGeometry({
     rectangle: Cesium.Rectangle.fromDegrees(90, 20, 100, 30),
-    vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
   });
   const rectangleInstance2 = new Cesium.GeometryInstance({
     id: "rectangleInstance2",
@@ -84,103 +84,42 @@ onMounted(async () => {
   // let appearance = new Cesium.EllipsoidSurfaceAppearance({
   //   material: material2,
   // });
-  // let material2 = Cesium.Material.fromType("Color", {
-  //   color: new Cesium.Color(0.0, 1.0, 1.0, 0.5),
-  // });
-  // let material2 = new Cesium.Material({
-  //   fabric: {
-  //     type: "Image",
-  //     uniforms: {
-  //       image: "/texture/logo.png",
-  //       repeat: new Cesium.Cartesian2(1, 1),
-  //     },
-  //   },
-  // });
-  // let material2 = Cesium.Material.fromType("Image", {
-  //   image: "/texture/logo.png",
-  //   repeat: new Cesium.Cartesian2(2, 2),
-  // });
-  //type：DiffuseMap
-  // let material2 = Cesium.Material.fromType("DiffuseMap", {
-  //   image: "/texture/logo.png",
-  //   // repeat: new Cesium.Cartesian2(2, 2),
-  //   color: new Cesium.Color(0.0, 1.0, 1.0, 0.5),
-  // });
-  //type:grid
-  // let material2 = Cesium.Material.fromType("Grid", {
-  //   color: new Cesium.Color(0.0, 1.0, 1.0, 0.5),
-  //   cellAlpha: 0.5,
-  //   lineCount: new Cesium.Cartesian2(4, 4),
-  //   lineThickness: new Cesium.Cartesian2(4.0, 4.0),
-  //   lineOffset: new Cesium.Cartesian2(0.5, 0.5),
-  // });
-
-  //type:water
-  // let material2 = Cesium.Material.fromType("Water", {
-  //   baseWaterColor: Cesium.Color.AQUA.withAlpha(0.8),
-  //   distortion: 0.25,
-  //   normalMap: "/Assets/Textures/waterNormals.jpg",
-  // });
-  let material2 = new Cesium.Material({
-    fabric: {
-      uniforms: {
-        uTime: 0,
-      },
-      source: `
-        czm_material czm_getMaterial(czm_materialInput materialInput)
-        {
-            czm_material material = czm_getDefaultMaterial(materialInput);
-            float strength = mod((materialInput.s+uTime) * 10.0, 1.0);
-          material.diffuse = vec3(strength, 0.0, 0.0);
-          return material;
-        }
-      `,
-    },
+  let material2 = Cesium.Material.fromType("Color", {
+    color: new Cesium.Color(0.0, 1.0, 1.0, 0.5),
   });
-
-  console.log("🚀 ~ material2:", material2);
   //可以采用上面传对象写法，也可以采用下面的方式
   // material2.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.5);
 
-  let appearance = new Cesium.EllipsoidSurfaceAppearance({
-    // material: material2,
-    //片源着色器
-    fragmentShaderSource: `
-in vec2 v_st;
-uniform float uTime; // 声明 uniform
-
-void main()
-{
-    // czm_materialInput materialInput;
-    //  vec4 backgroundColor = vec4(v_st,1.0,1.0);
-    // czm_material material = czm_getMaterial(materialInput);
-
-
-  // 最终混合：如果想全局替换背景色，可以直接覆盖
-    out_FragColor =  vec4(v_st,uTime,1.0);
-}
-`,
-  });
-  appearance.uniforms = {
-    uTime: 0,
-  };
-  console.log("🚀 ~ appearance:", appearance);
-
-  //用gasp创建补间动画
-  gsap.to(appearance.uniforms, {
-    duration: 2,
-    uTime: 1,
-    repeat: -1,
-    yoyo: true,
-    ease: "linear",
+  let appearance = new Cesium.MaterialAppearance({
+    material: material2,
   });
   const primitive = new Cesium.Primitive({
     geometryInstances: [rectangleInstance, rectangleInstance2],
     appearance: appearance,
   });
 
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction((movement) => {
+    const pick = viewer.scene.pick(movement.position);
+    console.log("🚀 ~ pick:", pick, pick.id);
+
+    //如果点击的entities创建的实体，想拿到id得通过pick.id._id,如果是用primitives创建的实体，通过pick.id
+    if (Cesium.defined(pick) && pick.id._id === "rectangleEntity") {
+      console.log("Mouse clicked rectangle.");
+      const entity = viewer.entities.getById("rectangleEntity");
+      entity.rectangle.material = Cesium.Color.fromRandom({ alpha: 1.0 });
+      console.log("🚀 ~ entity:", entity);
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   //通过primitives创建矩形
   viewer.scene.primitives.add(primitive);
+  setInterval(() => {
+    const attributes =
+      primitive.getGeometryInstanceAttributes("rectangleInstance1");
+    attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(
+      Cesium.Color.fromRandom({ alpha: 1.0 })
+    );
+  }, 2000);
 });
 </script>
 <style scoped lang="scss">

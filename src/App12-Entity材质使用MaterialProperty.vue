@@ -1,0 +1,116 @@
+<template>
+  <div id="cesiumContainer" class="container"></div>
+</template>
+<script setup>
+//导入ION
+import * as Cesium from "cesium";
+window.CESIUM_BASE_URL = "/";
+
+import "cesium/Build/Cesium/Widgets/widgets.css";
+import { onMounted } from "vue";
+
+Cesium.Ion.defaultAccessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmYmE4NmE2OS1kNzYzLTRhZmItOThlMC05NjQxY2FiM2Y0OTQiLCJpZCI6MzIxMTU3LCJpYXQiOjE3NTI0NTc5Nzh9.R6dYKw8CWLxIFurs6-vr80vy28W5gztwaiT0fS5hn1M";
+
+// 设置cesium默认视角
+Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(
+  // 西边的经度
+  89.5,
+  // 南边维度
+  20.4,
+  // 东边经度
+  110.4,
+  // 北边维度
+  61.2
+);
+
+onMounted(async () => {
+  const viewer = new Cesium.Viewer("cesiumContainer", {
+    infoBox: false,
+  });
+
+  viewer.cesiumWidget.creditContainer.style.display = "none";
+
+  // let material = new Cesium.CheckerboardMaterialProperty({
+  //   evenColor: Cesium.Color.WHITE,
+  //   oddColor: Cesium.Color.BLACK,
+  //   repeat: new Cesium.Cartesian2(4, 4),
+  // });
+  let material = new Cesium.StripeMaterialProperty({
+    evenColor: Cesium.Color.WHITE,
+    oddColor: Cesium.Color.BLACK,
+    repeat: 32,
+  });
+  //通过entity创建矩形实体
+  viewer.entities.add({
+    id: "rectangleEntity",
+    name: "rectangle",
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(100, 20, 110, 30),
+      // material: Cesium.Color.RED.withAlpha(0.5),
+      material: material,
+    },
+  });
+
+  const rectangleGeometry = new Cesium.RectangleGeometry({
+    rectangle: Cesium.Rectangle.fromDegrees(80, 20, 90, 30),
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+  });
+
+  const rectangleInstance = new Cesium.GeometryInstance({
+    id: "rectangleInstance1",
+    geometry: rectangleGeometry,
+    attributes: {
+      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+        Cesium.Color.BLUE.withAlpha(0.5)
+      ),
+    },
+  });
+  const rectangleGeometry2 = new Cesium.RectangleGeometry({
+    rectangle: Cesium.Rectangle.fromDegrees(90, 20, 100, 30),
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+  });
+  const rectangleInstance2 = new Cesium.GeometryInstance({
+    id: "rectangleInstance2",
+    geometry: rectangleGeometry2,
+    attributes: {
+      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+        Cesium.Color.GREEN.withAlpha(0.5)
+      ),
+    },
+  });
+  const primitive = new Cesium.Primitive({
+    geometryInstances: [rectangleInstance, rectangleInstance2],
+    appearance: new Cesium.PerInstanceColorAppearance({}),
+  });
+
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction((movement) => {
+    const pick = viewer.scene.pick(movement.position);
+    console.log("🚀 ~ pick:", pick, pick.id);
+
+    //如果点击的entities创建的实体，想拿到id得通过pick.id._id,如果是用primitives创建的实体，通过pick.id
+    if (Cesium.defined(pick) && pick.id._id === "rectangleEntity") {
+      console.log("Mouse clicked rectangle.");
+      const entity = viewer.entities.getById("rectangleEntity");
+      entity.rectangle.material = Cesium.Color.fromRandom({ alpha: 1.0 });
+      console.log("🚀 ~ entity:", entity);
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  //通过primitives创建矩形
+  viewer.scene.primitives.add(primitive);
+  setInterval(() => {
+    const attributes =
+      primitive.getGeometryInstanceAttributes("rectangleInstance1");
+    attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(
+      Cesium.Color.fromRandom({ alpha: 1.0 })
+    );
+  }, 2000);
+});
+</script>
+<style scoped lang="scss">
+.container {
+  width: 100vw;
+  height: 100vh;
+}
+</style>

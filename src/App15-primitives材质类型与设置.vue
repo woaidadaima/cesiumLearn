@@ -8,7 +8,7 @@ window.CESIUM_BASE_URL = "/";
 
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted } from "vue";
-import { gsap } from "gsap";
+
 Cesium.Ion.defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmYmE4NmE2OS1kNzYzLTRhZmItOThlMC05NjQxY2FiM2Y0OTQiLCJpZCI6MzIxMTU3LCJpYXQiOjE3NTI0NTc5Nzh9.R6dYKw8CWLxIFurs6-vr80vy28W5gztwaiT0fS5hn1M";
 
@@ -116,63 +116,16 @@ onMounted(async () => {
   // });
 
   //type:water
-  // let material2 = Cesium.Material.fromType("Water", {
-  //   baseWaterColor: Cesium.Color.AQUA.withAlpha(0.8),
-  //   distortion: 0.25,
-  //   normalMap: "/Assets/Textures/waterNormals.jpg",
-  // });
-  let material2 = new Cesium.Material({
-    fabric: {
-      uniforms: {
-        uTime: 0,
-      },
-      source: `
-        czm_material czm_getMaterial(czm_materialInput materialInput)
-        {
-            czm_material material = czm_getDefaultMaterial(materialInput);
-            float strength = mod((materialInput.s+uTime) * 10.0, 1.0);
-          material.diffuse = vec3(strength, 0.0, 0.0);
-          return material;
-        }
-      `,
-    },
+  let material2 = Cesium.Material.fromType("Water", {
+    baseWaterColor: Cesium.Color.AQUA.withAlpha(0.8),
+    distortion: 0.25,
+    normalMap: "/Assets/Textures/waterNormals.jpg",
   });
-
-  console.log("🚀 ~ material2:", material2);
   //可以采用上面传对象写法，也可以采用下面的方式
   // material2.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.5);
 
   let appearance = new Cesium.EllipsoidSurfaceAppearance({
-    // material: material2,
-    //片源着色器
-    fragmentShaderSource: `
-in vec2 v_st;
-uniform float uTime; // 声明 uniform
-
-void main()
-{
-    // czm_materialInput materialInput;
-    //  vec4 backgroundColor = vec4(v_st,1.0,1.0);
-    // czm_material material = czm_getMaterial(materialInput);
-
-
-  // 最终混合：如果想全局替换背景色，可以直接覆盖
-    out_FragColor =  vec4(v_st,uTime,1.0);
-}
-`,
-  });
-  appearance.uniforms = {
-    uTime: 0,
-  };
-  console.log("🚀 ~ appearance:", appearance);
-
-  //用gasp创建补间动画
-  gsap.to(appearance.uniforms, {
-    duration: 2,
-    uTime: 1,
-    repeat: -1,
-    yoyo: true,
-    ease: "linear",
+    material: material2,
   });
   const primitive = new Cesium.Primitive({
     geometryInstances: [rectangleInstance, rectangleInstance2],
